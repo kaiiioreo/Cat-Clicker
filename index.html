@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Purr Factory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: windowsill stage on the left (big cat + purr meter), shop panel on the right; stacks on phones. */
+:root {
+  --bg: #ECEEF5;
+  --bg-2: #DDE1EE;
+  --surface: #FFFFFF;
+  --surface-2: #F4F5FA;
+  --ink: #26223A;
+  --muted: #676383;
+  --line: #D3D5E3;
+  --accent: #0F7C75;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #D3EEEB;
+  --gold: #C98A10;
+  --gold-soft: #FFF1CC;
+  --heart: #E0567A;
+  --locked: #A7A6B9;
+  --font-display: "Fredoka", "Baloo 2", system-ui, sans-serif;
+  --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15131D; --bg-2: #1D1A28; --surface: #221F2F; --surface-2: #2A2639;
+    --ink: #EEEBF8; --muted: #A19CBB; --line: #383349;
+    --accent: #4FD1C5; --accent-ink: #0D2A28; --accent-soft: #173C3A;
+    --gold: #F2C14E; --gold-soft: #3A3018; --heart: #FF7EA0; --locked: #5D5873;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15131D; --bg-2: #1D1A28; --surface: #221F2F; --surface-2: #2A2639;
+  --ink: #EEEBF8; --muted: #A19CBB; --line: #383349;
+  --accent: #4FD1C5; --accent-ink: #0D2A28; --accent-soft: #173C3A;
+  --gold: #F2C14E; --gold-soft: #3A3018; --heart: #FF7EA0; --locked: #5D5873;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 32px;
+  overflow-x: hidden;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.app {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 820px) { .app { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Stage ---------- */
+.stage {
+  background: radial-gradient(120% 80% at 50% 30%, var(--surface) 0%, var(--bg-2) 100%);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: 22px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.brand {
+  align-self: stretch;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.brand h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: 0.01em;
+}
+.brand h1 span { color: var(--accent); }
+.hz {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.counter { text-align: center; margin-top: 4px; }
+.counter .big {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.counter .unit {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.05rem;
+  color: var(--muted);
+}
+.counter .rate {
+  margin-top: 6px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.cat-wrap {
+  position: relative;
+  width: min(340px, 82vw);
+  aspect-ratio: 1;
+  max-width: 100%;
+  display: grid;
+  place-items: center;
+  margin-block: 4px;
+}
+.ring {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  opacity: 0;
+  animation: ripple 3.2s ease-out infinite;
+  pointer-events: none;
+}
+.ring:nth-child(2) { animation-delay: 1.06s; }
+.ring:nth-child(3) { animation-delay: 2.13s; }
+@keyframes ripple {
+  0% { transform: scale(0.75); opacity: 0.35; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+.cat-btn {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: 50%;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s cubic-bezier(.3,1.6,.5,1);
+  touch-action: manipulation;
+}
+.cat-btn:hover { transform: scale(1.03) rotate(-1deg); }
+.cat-btn.squish { transform: scale(0.94, 0.9) !important; transition-duration: 0.05s; }
+.cat-btn svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 10px 14px rgba(20, 10, 40, 0.18)); }
+.cat-btn .eyes-open { transform-origin: 120px 96px; animation: blink 5.5s infinite; }
+.cat-btn .eyes-happy { display: none; }
+.cat-btn.happy .eyes-open { display: none; }
+.cat-btn.happy .eyes-happy { display: inline; }
+.cat-btn .tail { transform-origin: 186px 196px; animation: swish 2.6s ease-in-out infinite; }
+@keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.08); } }
+@keyframes swish { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(12deg); } }
+
+.hint { font-size: 0.85rem; color: var(--muted); text-align: center; }
+
+.floaty {
+  position: fixed;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--accent);
+  text-shadow: 0 1px 0 var(--surface);
+  animation: floatUp 0.95s ease-out forwards;
+  z-index: 40;
+  white-space: nowrap;
+}
+.heart {
+  position: fixed;
+  pointer-events: none;
+  color: var(--heart);
+  font-size: 1rem;
+  z-index: 39;
+  animation: heartFly 0.8s ease-out forwards;
+}
+@keyframes floatUp { from { transform: translate(-50%, 0); opacity: 1; } to { transform: translate(-50%, -70px); opacity: 0; } }
+@keyframes heartFly { from { opacity: 1; transform: translate(0,0) scale(1); } to { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.5); } }
+
+.buffs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; min-height: 28px; }
+.buff {
+  background: var(--gold-soft);
+  color: var(--ink);
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ticker {
+  align-self: stretch;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  min-height: 2.6em;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.ticker b {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  flex: none;
+}
+.ticker span { min-width: 0; transition: opacity 0.4s; }
+
+.stats {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.stat { text-align: center; padding: 6px 4px; }
+.stat .k { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+.stat .v { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+
+/* ---------- Shop ---------- */
+.shop {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+.shop h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.shop h2 small { font-family: var(--font-body); font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+
+.upgrades { display: flex; flex-wrap: wrap; gap: 8px; }
+.upgrades .empty { font-size: 0.85rem; color: var(--muted); }
+.up {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 14px;
+  padding: 8px 12px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1 1 150px;
+  min-width: 0;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.up .n { font-weight: 800; font-size: 0.86rem; }
+.up .d { font-size: 0.76rem; color: var(--muted); }
+.up .c { font-size: 0.78rem; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+.up.cant { cursor: not-allowed; }
+.up.cant .c { color: var(--muted); }
+.up:not(.cant):hover { border-color: var(--accent); transform: translateY(-1px); }
+
+.bulk { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.bulk button {
+  border: 0; background: transparent; padding: 3px 10px; font-size: 0.75rem; font-weight: 800; cursor: pointer; color: var(--muted);
+}
+.bulk button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+.buildings { display: flex; flex-direction: column; gap: 8px; }
+.bld {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  border-radius: 16px;
+  padding: 10px 14px 10px 10px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.bld:not(.cant):hover { border-color: var(--accent); transform: translateX(2px); }
+.bld.cant { cursor: not-allowed; }
+.bld.cant .icon { opacity: 0.55; }
+.bld .icon {
+  width: 48px; height: 48px; border-radius: 12px; background: var(--accent-soft);
+  display: grid; place-items: center;
+}
+.bld .icon svg { width: 34px; height: 34px; }
+.bld .nm { font-family: var(--font-display); font-weight: 600; font-size: 1.02rem; }
+.bld .ds { font-size: 0.78rem; color: var(--muted); }
+.bld .pr { font-size: 0.82rem; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+.bld.cant .pr { color: var(--muted); }
+.bld .own {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: var(--muted);
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+  min-width: 2ch;
+  text-align: right;
+}
+.bld.mystery .nm, .bld.mystery .ds { color: var(--locked); }
+.bld.mystery .icon svg { filter: grayscale(1) brightness(0.4); opacity: 0.4; }
+
+.footer-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.78rem; color: var(--muted); }
+.linkbtn { border: 0; background: none; color: var(--muted); text-decoration: underline; cursor: pointer; font-size: 0.78rem; padding: 2px; }
+.linkbtn.danger { color: var(--heart); }
+.confirm { display: inline-flex; gap: 8px; align-items: center; }
+
+/* ---------- Golden sardine ---------- */
+.sardine {
+  position: fixed;
+  z-index: 30;
+  width: 74px;
+  height: 46px;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  animation: bob 1.4s ease-in-out infinite, fadeIn 0.6s ease-out;
+  filter: drop-shadow(0 0 10px rgba(242, 193, 78, 0.85));
+}
+.sardine svg { width: 100%; height: 100%; }
+@keyframes bob { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-8px) rotate(6deg); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.toasts {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 50;
+  width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.toast {
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  animation: toastIn 0.25s ease-out;
+}
+.toast b { color: var(--gold); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ring, .cat-btn .tail, .cat-btn .eyes-open, .sardine { animation: none !important; }
+  .floaty, .heart { animation-duration: 0.01s; }
+}
+</style>
+</head>
+<body>
+
+<main class="app">
+  <section class="stage" aria-label="Your cat">
+    <div class="brand">
+      <h1>Purr <span>Factory</span></h1>
+      <div class="hz" id="hz" title="A real cat purrs at roughly 25–150 Hz">Purr frequency 25 Hz</div>
+    </div>
+
+    <div class="counter">
+      <div><span class="big" id="purrs">0</span> <span class="unit" id="unit">purrs</span></div>
+      <div class="rate" id="rate">0 per second</div>
+    </div>
+
+    <div class="cat-wrap">
+      <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+      <button class="cat-btn" id="cat" aria-label="Pet the cat">
+        <svg viewBox="0 0 240 240" aria-hidden="true">
+          <g class="tail">
+            <path d="M178 196 C 232 196, 236 132, 206 116" fill="none" stroke="#E8913F" stroke-width="18" stroke-linecap="round"/>
+            <path d="M222 150 l -14 4 M216 132 l -13 7" stroke="#C96E22" stroke-width="5" stroke-linecap="round"/>
+          </g>
+          <ellipse cx="120" cy="184" rx="74" ry="46" fill="#F2A65A"/>
+          <path d="M62 170 q 10 -6 16 4 M178 170 q -10 -6 -16 4" stroke="#C96E22" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <ellipse cx="120" cy="196" rx="38" ry="28" fill="#FCE6CC"/>
+          <ellipse cx="92" cy="224" rx="18" ry="11" fill="#F7B572"/>
+          <ellipse cx="148" cy="224" rx="18" ry="11" fill="#F7B572"/>
+          <path d="M86 226 v-6 M92 227 v-7 M98 226 v-6 M142 226 v-6 M148 227 v-7 M154 226 v-6" stroke="#D9853A" stroke-width="2" stroke-linecap="round"/>
+          <path d="M52 76 L64 14 L110 52 Z" fill="#F2A65A"/>
+          <path d="M188 76 L176 14 L130 52 Z" fill="#F2A65A"/>
+          <path d="M64 66 L70 32 L96 54 Z" fill="#F7B7C3"/>
+          <path d="M176 66 L170 32 L144 54 Z" fill="#F7B7C3"/>
+          <ellipse cx="120" cy="96" rx="76" ry="62" fill="#F2A65A"/>
+          <path d="M120 36 v 20 M104 39 l 4 16 M136 39 l -4 16" stroke="#C96E22" stroke-width="6" stroke-linecap="round"/>
+          <path d="M46 92 q 12 2 18 8 M46 108 q 12 0 18 4 M194 92 q -12 2 -18 8 M194 108 q -12 0 -18 4" stroke="#C96E22" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <ellipse cx="120" cy="124" rx="34" ry="24" fill="#FCE6CC"/>
+          <ellipse cx="72" cy="118" rx="12" ry="7" fill="#F58FA6" opacity="0.45"/>
+          <ellipse cx="168" cy="118" rx="12" ry="7" fill="#F58FA6" opacity="0.45"/>
+          <g class="eyes-open">
+            <ellipse cx="90" cy="96" rx="14" ry="16" fill="#9BD46B"/>
+            <ellipse cx="150" cy="96" rx="14" ry="16" fill="#9BD46B"/>
+            <ellipse cx="90" cy="97" rx="5" ry="12" fill="#1F1A2B"/>
+            <ellipse cx="150" cy="97" rx="5" ry="12" fill="#1F1A2B"/>
+            <circle cx="94" cy="90" r="3.5" fill="#FFFFFF"/>
+            <circle cx="154" cy="90" r="3.5" fill="#FFFFFF"/>
+          </g>
+          <g class="eyes-happy">
+            <path d="M77 100 q 13 -16 26 0 M137 100 q 13 -16 26 0" stroke="#1F1A2B" stroke-width="5" fill="none" stroke-linecap="round"/>
+          </g>
+          <path d="M111 114 L129 114 L120 124 Z" fill="#E5768F" stroke-linejoin="round"/>
+          <path d="M120 124 q -5 10 -14 6 M120 124 q 5 10 14 6" stroke="#6B3A1F" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M86 120 L 40 112 M86 126 L 42 130 M154 120 L 200 112 M154 126 L 198 130" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+        </svg>
+      </button>
+    </div>
+    <div class="hint" id="hint">Pet the cat to make it purr.</div>
+    <div class="buffs" id="buffs" aria-live="polite"></div>
+
+    <div class="ticker"><b>Neighborhood</b><span id="news">A cat has moved in. It seems to like you.</span></div>
+
+    <div class="stats">
+      <div class="stat"><div class="k">All-time purrs</div><div class="v" id="sTotal">0</div></div>
+      <div class="stat"><div class="k">Pets given</div><div class="v" id="sClicks">0</div></div>
+      <div class="stat"><div class="k">Per pet</div><div class="v" id="sPer">1</div></div>
+    </div>
+  </section>
+
+  <section class="shop" aria-label="Shop">
+    <div>
+      <h2>Upgrades <small id="upCount"></small></h2>
+      <div class="upgrades" id="upgrades"></div>
+    </div>
+    <div>
+      <h2>
+        Purr sources
+        <span class="bulk" role="group" aria-label="Buy amount">
+          <button data-n="1" aria-pressed="true">×1</button><button data-n="10" aria-pressed="false">×10</button><button data-n="100" aria-pressed="false">×100</button>
+        </span>
+      </h2>
+      <div class="buildings" id="buildings"></div>
+    </div>
+    <div class="footer-row">
+      <span id="saveNote">Progress saves in this browser.</span>
+      <span id="resetArea"><button class="linkbtn danger" id="resetBtn">Start over</button></span>
+    </div>
+  </section>
+</main>
+<div id="fx"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Content ----------
+  const ICONS = {
+    yarn: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="14" fill="#E0567A"/><path d="M9 14 q 11 4 22 -2 M7 22 q 13 6 26 -4 M12 30 q 10 2 20 -8" stroke="#FFD1DC" stroke-width="2" fill="none"/><path d="M33 26 q 5 6 0 10" stroke="#E0567A" stroke-width="2" fill="none"/></svg>',
+    laser: '<svg viewBox="0 0 40 40"><rect x="4" y="22" width="20" height="7" rx="3.5" transform="rotate(-25 14 25)" fill="#5A5670"/><circle cx="31" cy="12" r="5" fill="#FF3B3B"/><circle cx="31" cy="12" r="9" fill="#FF3B3B" opacity="0.25"/></svg>',
+    box: '<svg viewBox="0 0 40 40"><path d="M6 16 L20 10 L34 16 L34 32 L20 36 L6 32 Z" fill="#C89A63"/><path d="M6 16 L20 22 L34 16 M20 22 V36" stroke="#9C7344" stroke-width="2" fill="none"/><path d="M14 13 l2 -6 4 4 4 -4 2 6" fill="#F2A65A"/></svg>',
+    catnip: '<svg viewBox="0 0 40 40"><path d="M20 36 V14" stroke="#3F8F4A" stroke-width="3"/><ellipse cx="13" cy="20" rx="8" ry="4.5" transform="rotate(-30 13 20)" fill="#5DB86A"/><ellipse cx="27" cy="16" rx="8" ry="4.5" transform="rotate(30 27 16)" fill="#5DB86A"/><ellipse cx="20" cy="9" rx="4" ry="6" fill="#7FD08A"/><ellipse cx="14" cy="30" rx="7" ry="4" transform="rotate(-20 14 30)" fill="#4CA858"/></svg>',
+    cafe: '<svg viewBox="0 0 40 40"><path d="M8 16 H28 V26 a8 8 0 0 1 -8 8 H16 a8 8 0 0 1 -8 -8 Z" fill="#F7F3EE" stroke="#8A6A55" stroke-width="2"/><path d="M28 19 h3 a4 4 0 0 1 0 8 h-3" stroke="#8A6A55" stroke-width="2" fill="none"/><path d="M12 16 l2 -5 3 3 3 -3 2 5" fill="#8A6A55"/></svg>',
+    shelter: '<svg viewBox="0 0 40 40"><path d="M5 20 L20 7 L35 20" fill="none" stroke="#C0503F" stroke-width="3" stroke-linejoin="round"/><rect x="9" y="19" width="22" height="16" fill="#F2D2A9"/><path d="M17 35 v-7 a3 3 0 0 1 6 0 v7" fill="#8A5A3B"/><path d="M20 18 c -3 -4 -8 0 0 5 c 8 -5 3 -9 0 -5" fill="#E0567A"/></svg>',
+    cannery: '<svg viewBox="0 0 40 40"><ellipse cx="20" cy="11" rx="13" ry="4" fill="#B8BCC9"/><rect x="7" y="11" width="26" height="20" fill="#5B8CD6"/><ellipse cx="20" cy="31" rx="13" ry="4" fill="#4772B5"/><path d="M12 21 q 8 -6 14 0 q -6 6 -14 0 Z M26 21 l 4 -3 v6 Z" fill="#F2F4FA"/></svg>',
+    temple: '<svg viewBox="0 0 40 40"><path d="M20 4 L35 34 H5 Z" fill="#E8C266"/><path d="M20 4 L27 18 H13 Z" fill="#F6DD95"/><path d="M15 34 v-9 l2 -4 3 3 3 -3 2 4 v9" fill="#2B2540"/><circle cx="18" cy="27" r="1" fill="#F2C14E"/><circle cx="22" cy="27" r="1" fill="#F2C14E"/></svg>',
+    moon: '<svg viewBox="0 0 40 40"><path d="M27 6 a15 15 0 1 0 6 24 a12 12 0 1 1 -6 -24 Z" fill="#E7E3F7"/><circle cx="14" cy="18" r="2" fill="#C5BEE3"/><circle cx="18" cy="28" r="3" fill="#C5BEE3"/><path d="M27 20 l2 -5 3 3 3 -3 2 5 a5 5 0 0 1 -10 0 Z" fill="#2B2540"/></svg>',
+    nebula: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15" fill="#6B4EC8"/><circle cx="20" cy="20" r="10" fill="#A27BF0"/><circle cx="20" cy="20" r="5" fill="#F3E9FF"/><path d="M14 16 l2 -5 3 3 3 -3 2 5" fill="#1D1830"/><circle cx="8" cy="8" r="1.5" fill="#F3E9FF"/><circle cx="33" cy="31" r="1.2" fill="#F3E9FF"/></svg>'
+  };
+
+  const BUILDINGS = [
+    { id: "yarn",    name: "Yarn Ball",       base: 15,      pps: 0.1,    desc: "Gets batted under the couch. Purrs faintly about it." },
+    { id: "laser",   name: "Laser Pointer",   base: 100,     pps: 1,      desc: "The red dot can never be caught. That's the point." },
+    { id: "box",     name: "Cardboard Box",   base: 1100,    pps: 8,      desc: "If it fits, it sits. Then it purrs." },
+    { id: "catnip",  name: "Catnip Garden",   base: 12000,   pps: 47,     desc: "Grows Nepeta cataria. Effects last about ten minutes." },
+    { id: "cafe",    name: "Cat Café",        base: 130000,  pps: 260,    desc: "Customers pay to be ignored by twelve cats at once." },
+    { id: "shelter", name: "Rescue Shelter",  base: 1.4e6,   pps: 1400,   desc: "Every adoption adds another purring lap cat." },
+    { id: "cannery", name: "Tuna Cannery",    base: 2e7,     pps: 7800,   desc: "The can opener sound is heard for miles." },
+    { id: "temple",  name: "Temple of Bastet",base: 3.3e8,   pps: 44000,  desc: "Ancient Egypt had the right idea." },
+    { id: "moon",    name: "Moon Cat Colony", base: 5.1e9,   pps: 260000, desc: "Low gravity means very high windowsills." },
+    { id: "nebula",  name: "Purr Nebula",     base: 7.5e10,  pps: 1.6e6,  desc: "A cosmic cloud vibrating at a steady 26 Hz." }
+  ];
+
+  const TIER_NAMES = {
+    yarn:    ["Merino Wool", "Tangled Mess", "Unravelling Spree", "Infinite Skein", "Golden Thread"],
+    laser:   ["Fresh Batteries", "Figure Eights", "Green Laser", "Disco Mode", "Orbital Laser"],
+    box:     ["Double-Walled", "Box Fort", "Moving Day", "Warehouse Club", "Tesseract Box"],
+    catnip:  ["Organic Soil", "Greenhouse", "Silvervine Blend", "Hydroponics", "Catnip Rain"],
+    cafe:    ["Latte Art", "Window Seats", "Cat Influencers", "Franchise", "Michelin Purr"],
+    shelter: ["Volunteer Day", "Kitten Season", "Foster Network", "Adoption Fair", "No Cat Left"],
+    cannery: ["Pull-Tab Lids", "Gravy Variant", "Sashimi Grade", "Fleet of Boats", "Ocean Pact"],
+    temple:  ["Incense", "Hieroglyphs", "Sphinx Statue", "High Priestess", "Divine Nap"],
+    moon:    ["Space Helmets", "Crater Beds", "Lunar Litter", "Tidal Purrs", "Dark Side Lounge"],
+    nebula:  ["Stardust", "Gravity Wells", "Purr Pulsar", "Cosmic Biscuits", "Big Purr Theory"]
+  };
+  const TIERS = [ { n: 1, m: 10 }, { n: 5, m: 50 }, { n: 25, m: 500 }, { n: 50, m: 50000 }, { n: 100, m: 5e6 } ];
+
+  const UPGRADES = [];
+  BUILDINGS.forEach((b) => {
+    TIERS.forEach((t, i) => {
+      UPGRADES.push({
+        id: b.id + "-" + i, name: TIER_NAMES[b.id][i], kind: "bld", target: b.id,
+        cost: b.base * t.m, desc: b.name + "s purr twice as much.",
+        unlock: (s) => (s.owned[b.id] || 0) >= t.n
+      });
+    });
+  });
+  const CLICK_UPS = [
+    { id: "c0", name: "Soft Hands",      cost: 100,    mult: 2, desc: "Pets are worth twice as much.", need: 1 },
+    { id: "c1", name: "Chin Scratches",  cost: 500,    mult: 2, desc: "Pets are worth twice as much.", need: 1 },
+    { id: "c2", name: "Behind the Ears", cost: 10000,  mult: 2, desc: "Pets are worth twice as much.", need: 10 },
+    { id: "c3", name: "Slow Blink",      cost: 100000, pct: 0.01, desc: "Each pet also gives 1% of your purrs per second.", need: 20 },
+    { id: "c4", name: "Kneading Biscuits", cost: 1e7,  pct: 0.02, desc: "Each pet also gives 2% more of your purrs per second.", need: 50 },
+    { id: "c5", name: "Belly Rub (Risky)", cost: 1e9,  pct: 0.03, desc: "Each pet also gives 3% more of your purrs per second.", need: 100 },
+    { id: "c6", name: "Head Bonk",       cost: 1e11,   pct: 0.05, desc: "Each pet also gives 5% more of your purrs per second.", need: 150 }
+  ];
+  CLICK_UPS.forEach((u) => UPGRADES.push(Object.assign({ kind: "click", unlock: (s) => totalBuildings(s) >= u.need }, u)));
+  const GLOBAL_UPS = [
+    { id: "g0", name: "Warm Windowsill", cost: 5e4,  mult: 1.1, desc: "All purrs +10%.",  need: 1e4 },
+    { id: "g1", name: "Heated Blanket",  cost: 5e6,  mult: 1.15, desc: "All purrs +15%.", need: 1e6 },
+    { id: "g2", name: "Sunbeam",         cost: 5e8,  mult: 1.2, desc: "All purrs +20%.",  need: 1e8 },
+    { id: "g3", name: "Fresh Laundry",   cost: 5e10, mult: 1.25, desc: "All purrs +25%.", need: 1e10 },
+    { id: "g4", name: "Your Keyboard",   cost: 5e12, mult: 1.3, desc: "All purrs +30%. Typing is over.", need: 1e12 }
+  ];
+  GLOBAL_UPS.forEach((u) => UPGRADES.push(Object.assign({ kind: "global", unlock: (s) => s.total >= u.need }, u)));
+  UPGRADES.push({ id: "f0", name: "Fish Market Tip-off", kind: "fish", cost: 7.7e4, desc: "Golden sardines show up twice as often.", unlock: (s) => s.fish >= 3 });
+  const UP_BY_ID = Object.fromEntries(UPGRADES.map((u) => [u.id, u]));
+
+  const NEWS = [
+    [0, "A cat has moved in. It seems to like you."],
+    [0, "Local cat refuses to be photographed, then sits on the camera."],
+    [50, "A neighbor reports a faint rumbling sound from your house."],
+    [500, "Scientists confirm cats purr between 25 and 150 hertz."],
+    [500, "Your cat knocked a glass off the counter. It was not sorry."],
+    [5000, "Yarn shortages reported in three counties."],
+    [5000, "Dogs file a formal complaint about the noise."],
+    [5e4, "Sunbeam futures are up 12% this quarter."],
+    [5e4, "Survey: 9 in 10 cats would rather sit on the paperwork."],
+    [5e5, "Cardboard prices soar. Delivery boxes now come pre-occupied."],
+    [5e6, "City council debates whether purring counts as a utility."],
+    [5e6, "A tabby has been elected mayor. Approval rating: indifferent."],
+    [5e7, "Seismographs pick up a steady 26 Hz signal from your street."],
+    [5e8, "Tuna is now accepted as legal tender."],
+    [5e9, "The pyramids were cat beds all along, archaeologists admit."],
+    [5e10, "NASA confirms the Moon is mostly napping cats."],
+    [5e11, "The universe is now 4% purr by mass."]
+  ];
+
+  // ---------- State ----------
+  const SAVE_KEY = "purr-factory-v1";
+  function freshState() {
+    return { purrs: 0, total: 0, clicks: 0, owned: {}, ups: [], fish: 0, last: Date.now(), buffs: [] };
+  }
+  let S = freshState();
+  let bulk = 1;
+
+  function totalBuildings(s) { return Object.values(s.owned).reduce((a, b) => a + b, 0); }
+  function has(id) { return S.ups.includes(id); }
+  function costOf(b, owned, n) {
+    // sum of geometric series base*1.15^owned ... for n items
+    const r = 1.15;
+    return Math.ceil(b.base * Math.pow(r, owned) * (Math.pow(r, n) - 1) / (r - 1));
+  }
+  function bldMult(id) { let m = 1; S.ups.forEach((u) => { const x = UP_BY_ID[u]; if (x && x.kind === "bld" && x.target === id) m *= 2; }); return m; }
+  function globalMult() { let m = 1; S.ups.forEach((u) => { const x = UP_BY_ID[u]; if (x && x.kind === "global") m *= x.mult; }); return m; }
+  function buffMult(kind) { let m = 1; const now = Date.now(); S.buffs.forEach((b) => { if (b.end > now && b.kind === kind) m *= b.mult; }); return m; }
+  function basePps() {
+    let p = 0;
+    BUILDINGS.forEach((b) => { p += (S.owned[b.id] || 0) * b.pps * bldMult(b.id); });
+    return p * globalMult();
+  }
+  function pps() { return basePps() * buffMult("frenzy"); }
+  function perClick() {
+    let m = 1, pct = 0;
+    S.ups.forEach((u) => { const x = UP_BY_ID[u]; if (x && x.kind === "click") { if (x.mult) m *= x.mult; if (x.pct) pct += x.pct; } });
+    return (m + pps() * pct) * buffMult("click");
+  }
+
+  // ---------- Formatting ----------
+  const SUFFIX = ["", "thousand", "million", "billion", "trillion", "quadrillion", "quintillion", "sextillion", "septillion"];
+  function fmt(n, dec) {
+    if (n < 1000) return n < 10 && dec ? n.toFixed(1).replace(/\.0$/, "") : Math.floor(n).toLocaleString();
+    if (n < 1e6) return Math.floor(n).toLocaleString();
+    const e = Math.min(Math.floor(Math.log10(n) / 3), SUFFIX.length - 1);
+    return (n / Math.pow(1000, e)).toFixed(3).replace(/\.?0+$/, "") + " " + SUFFIX[e];
+  }
+  function fmtShort(n) {
+    if (n < 1e6) return fmt(n);
+    const e = Math.min(Math.floor(Math.log10(n) / 3), SUFFIX.length - 1);
+    return (n / Math.pow(1000, e)).toFixed(1).replace(/\.0$/, "") + " " + SUFFIX[e];
+  }
+
+  // ---------- DOM ----------
+  const $ = (id) => document.getElementById(id);
+  const el = {
+    purrs: $("purrs"), unit: $("unit"), rate: $("rate"), hz: $("hz"), cat: $("cat"), hint: $("hint"),
+    buffs: $("buffs"), news: $("news"), sTotal: $("sTotal"), sClicks: $("sClicks"), sPer: $("sPer"),
+    upgrades: $("upgrades"), upCount: $("upCount"), buildings: $("buildings"), fx: $("fx"), toasts: $("toasts"),
+    resetArea: $("resetArea")
+  };
+
+  function toast(html, ms) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.innerHTML = html;
+    el.toasts.appendChild(t);
+    setTimeout(() => t.remove(), ms || 3200);
+    while (el.toasts.children.length > 3) el.toasts.firstChild.remove();
+  }
+
+  // ---------- Clicking ----------
+  let happyTimer = 0;
+  function pet(ev) {
+    const v = perClick();
+    S.purrs += v; S.total += v; S.clicks++;
+    el.cat.classList.add("squish", "happy");
+    setTimeout(() => el.cat.classList.remove("squish"), 70);
+    clearTimeout(happyTimer);
+    happyTimer = setTimeout(() => el.cat.classList.remove("happy"), 280);
+
+    let x, y;
+    if (ev && ev.clientX) { x = ev.clientX; y = ev.clientY; }
+    else { const r = el.cat.getBoundingClientRect(); x = r.left + r.width / 2; y = r.top + r.height / 3; }
+    const f = document.createElement("div");
+    f.className = "floaty";
+    f.textContent = "+" + fmtShort(v);
+    f.style.left = x + "px"; f.style.top = (y - 20) + "px";
+    el.fx.appendChild(f);
+    setTimeout(() => f.remove(), 950);
+    for (let i = 0; i < 2; i++) {
+      const h = document.createElement("div");
+      h.className = "heart";
+      h.textContent = "♥";
+      h.style.left = x + "px"; h.style.top = y + "px";
+      h.style.setProperty("--dx", (Math.random() * 80 - 40) + "px");
+      h.style.setProperty("--dy", (-40 - Math.random() * 50) + "px");
+      el.fx.appendChild(h);
+      setTimeout(() => h.remove(), 800);
+    }
+    if (S.clicks === 1) el.hint.textContent = "Keep going. Buy a yarn ball to purr on autopilot.";
+    if (S.clicks === 30) el.hint.textContent = "Watch for golden sardines drifting across the screen.";
+    renderShop();
+  }
+  el.cat.addEventListener("click", pet);
+
+  // ---------- Shop ----------
+  function buyBuilding(b) {
+    const own = S.owned[b.id] || 0;
+    const c = costOf(b, own, bulk);
+    if (S.purrs < c) return;
+    S.purrs -= c;
+    S.owned[b.id] = own + bulk;
+    buildBuildings(); renderShop(); save();
+  }
+  function buyUpgrade(u) {
+    if (S.purrs < u.cost || has(u.id)) return;
+    S.purrs -= u.cost;
+    S.ups.push(u.id);
+    toast("Bought <b>" + u.name + "</b>. " + u.desc);
+    buildUpgrades(); renderShop(); save();
+  }
+
+  function availableUpgrades() {
+    return UPGRADES.filter((u) => !has(u.id) && u.unlock(S)).sort((a, b) => a.cost - b.cost);
+  }
+  let upSig = "";
+  function buildUpgrades() {
+    const list = availableUpgrades();
+    upSig = list.map((u) => u.id).join(",");
+    el.upgrades.innerHTML = "";
+    if (!list.length) {
+      const e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = S.ups.length ? "Nothing new yet. Buy more purr sources to unlock upgrades." : "Upgrades appear once you own a purr source.";
+      el.upgrades.appendChild(e);
+    }
+    list.slice(0, 8).forEach((u) => {
+      const b = document.createElement("button");
+      b.className = "up";
+      b.dataset.id = u.id;
+      b.innerHTML = '<span class="n"></span><span class="d"></span><span class="c"></span>';
+      b.querySelector(".n").textContent = u.name;
+      b.querySelector(".d").textContent = u.desc;
+      b.querySelector(".c").textContent = fmtShort(u.cost) + " purrs";
+      b.addEventListener("click", () => buyUpgrade(u));
+      el.upgrades.appendChild(b);
+    });
+    el.upCount.textContent = S.ups.length + " of " + UPGRADES.length + " owned";
+  }
+
+  let bldSig = "";
+  function visibleBuildings() {
+    // show owned / affordable-ish, plus one mystery entry
+    const out = [];
+    for (let i = 0; i < BUILDINGS.length; i++) {
+      const b = BUILDINGS[i];
+      const seen = (S.owned[b.id] || 0) > 0 || S.total >= b.base * 0.6 || i === 0;
+      if (seen) out.push({ b, mystery: false });
+      else { out.push({ b, mystery: true }); break; }
+    }
+    return out;
+  }
+  function buildBuildings() {
+    const vis = visibleBuildings();
+    bldSig = vis.map((v) => v.b.id + (v.mystery ? "?" : "") + (S.owned[v.b.id] || 0)).join(",") + "|" + bulk;
+    el.buildings.innerHTML = "";
+    vis.forEach(({ b, mystery }) => {
+      const own = S.owned[b.id] || 0;
+      const btn = document.createElement("button");
+      btn.className = "bld" + (mystery ? " mystery" : "");
+      btn.dataset.id = b.id;
+      const each = b.pps * bldMult(b.id) * globalMult();
+      btn.innerHTML =
+        '<span class="icon">' + ICONS[b.id] + '</span>' +
+        '<span><span class="nm"></span><br><span class="ds"></span><br><span class="pr"></span></span>' +
+        '<span class="own"></span>';
+      btn.querySelector(".nm").textContent = mystery ? "???" : b.name;
+      btn.querySelector(".ds").textContent = mystery ? "Earn more purrs to discover this." : b.desc + " (" + fmt(each, true) + "/s each)";
+      btn.querySelector(".pr").textContent = fmtShort(costOf(b, own, bulk)) + " purrs" + (bulk > 1 ? " for " + bulk : "");
+      btn.querySelector(".own").textContent = own || "";
+      btn.setAttribute("aria-label", (mystery ? "Unknown purr source" : b.name) + ", owned " + own + ", costs " + fmtShort(costOf(b, own, bulk)) + " purrs");
+      btn.addEventListener("click", () => { if (!mystery) buyBuilding(b); });
+      el.buildings.appendChild(btn);
+    });
+  }
+
+  function renderShop() {
+    const vis = visibleBuildings();
+    const sig = vis.map((v) => v.b.id + (v.mystery ? "?" : "") + (S.owned[v.b.id] || 0)).join(",") + "|" + bulk;
+    if (sig !== bldSig) buildBuildings();
+    const us = availableUpgrades().map((u) => u.id).join(",");
+    if (us !== upSig) buildUpgrades();
+
+    el.buildings.querySelectorAll(".bld").forEach((btn) => {
+      const b = BUILDINGS.find((x) => x.id === btn.dataset.id);
+      const c = costOf(b, S.owned[b.id] || 0, bulk);
+      const cant = btn.classList.contains("mystery") || S.purrs < c;
+      btn.classList.toggle("cant", cant);
+      btn.setAttribute("aria-disabled", cant ? "true" : "false");
+    });
+    el.upgrades.querySelectorAll(".up").forEach((btn) => {
+      const u = UP_BY_ID[btn.dataset.id];
+      const cant = S.purrs < u.cost;
+      btn.classList.toggle("cant", cant);
+      btn.setAttribute("aria-disabled", cant ? "true" : "false");
+    });
+  }
+
+  document.querySelectorAll(".bulk button").forEach((b) => {
+    b.addEventListener("click", () => {
+      bulk = Number(b.dataset.n);
+      document.querySelectorAll(".bulk button").forEach((x) => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+      buildBuildings(); renderShop();
+    });
+  });
+
+  // ---------- Golden sardine ----------
+  const SARDINE_SVG = '<svg viewBox="0 0 80 50"><path d="M8 25 C 20 6, 52 6, 64 25 C 52 44, 20 44, 8 25 Z" fill="#F2C14E" stroke="#B9851A" stroke-width="2"/><path d="M62 25 L 78 12 L 76 25 L 78 38 Z" fill="#F2C14E" stroke="#B9851A" stroke-width="2" stroke-linejoin="round"/><circle cx="20" cy="22" r="3.5" fill="#2B2540"/><path d="M30 14 q 4 11 0 22 M40 13 q 4 12 0 24" stroke="#D9A12E" stroke-width="2" fill="none"/></svg>';
+  let nextFish = Date.now() + 45000 + Math.random() * 45000;
+  let fishEl = null;
+  function spawnFish() {
+    if (fishEl) return;
+    const b = document.createElement("button");
+    b.className = "sardine";
+    b.setAttribute("aria-label", "Catch the golden sardine");
+    b.innerHTML = SARDINE_SVG;
+    const w = window.innerWidth, h = window.innerHeight;
+    b.style.left = (20 + Math.random() * Math.max(10, w - 110)) + "px";
+    b.style.top = (60 + Math.random() * Math.max(10, h - 160)) + "px";
+    b.addEventListener("click", () => catchFish(b));
+    document.body.appendChild(b);
+    fishEl = b;
+    setTimeout(() => { if (fishEl === b) { b.remove(); fishEl = null; } }, 13000);
+  }
+  function catchFish(b) {
+    b.remove(); fishEl = null;
+    S.fish++;
+    const r = Math.random();
+    if (r < 0.45) {
+      S.buffs.push({ kind: "frenzy", mult: 7, end: Date.now() + 30000, label: "Zoomies: ×7 purrs" });
+      toast("<b>Zoomies!</b> Purr production ×7 for 30 seconds.");
+    } else if (r < 0.6) {
+      S.buffs.push({ kind: "click", mult: 25, end: Date.now() + 12000, label: "Lap cat: pets ×25" });
+      toast("<b>Lap cat!</b> Every pet is worth ×25 for 12 seconds.");
+    } else {
+      const gain = Math.min(S.purrs * 0.15 + 13, pps() * 900 + 13);
+      S.purrs += gain; S.total += gain;
+      toast("<b>Lucky catch!</b> +" + fmtShort(gain) + " purrs.");
+    }
+    renderShop(); save();
+  }
+
+  // ---------- Save / load ----------
+  function save() {
+    S.last = Date.now();
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable */ }
+  }
+  function load(data) {
+    let d = data;
+    if (!d) { try { d = JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); } catch (e) { d = null; } }
+    if (!d || typeof d !== "object") return false;
+    S = Object.assign(freshState(), d);
+    S.ups = S.ups.filter((u) => UP_BY_ID[u]);
+    S.buffs = (S.buffs || []).filter((b) => b.end > Date.now());
+    return true;
+  }
+
+  // reset with in-page confirm
+  function wireReset() {
+    $("resetBtn").addEventListener("click", () => {
+      el.resetArea.innerHTML = '<span class="confirm">Erase everything? <button class="linkbtn danger" id="yes">Erase</button><button class="linkbtn" id="no">Keep playing</button></span>';
+      $("yes").addEventListener("click", () => {
+        S = freshState(); save(); restoreReset(); buildBuildings(); buildUpgrades(); renderShop();
+        el.hint.textContent = "Pet the cat to make it purr.";
+        toast("Fresh start. The cat forgives you.");
+      });
+      $("no").addEventListener("click", restoreReset);
+    });
+  }
+  function restoreReset() { el.resetArea.innerHTML = '<button class="linkbtn danger" id="resetBtn">Start over</button>'; wireReset(); }
+  wireReset();
+
+  // ---------- News ----------
+  let newsIdx = 0;
+  function rotateNews() {
+    const pool = NEWS.filter((n) => S.total >= n[0]).map((n) => n[1]);
+    newsIdx = (newsIdx + 1) % pool.length;
+    // prefer the newest unlocked headline sometimes
+    const line = Math.random() < 0.35 ? pool[pool.length - 1] : pool[Math.floor(Math.random() * pool.length)];
+    el.news.style.opacity = 0;
+    setTimeout(() => { el.news.textContent = line; el.news.style.opacity = 1; }, 400);
+  }
+  setInterval(rotateNews, 9000);
+
+  // ---------- Loop ----------
+  let lastT = performance.now();
+  let lastShop = 0, lastSave = Date.now();
+  function frame(t) {
+    const dt = Math.min((t - lastT) / 1000, 3600);
+    lastT = t;
+    const p = pps();
+    const gain = p * dt;
+    S.purrs += gain; S.total += gain;
+
+    el.purrs.textContent = fmt(S.purrs);
+    el.unit.textContent = Math.floor(S.purrs) === 1 ? "purr" : "purrs";
+    el.rate.textContent = fmt(p, true) + " per second";
+    const hz = Math.min(150, 25 + Math.log10(1 + p) * 12);
+    el.hz.textContent = "Purr frequency " + hz.toFixed(0) + " Hz";
+
+    if (t - lastShop > 200) {
+      lastShop = t;
+      el.sTotal.textContent = fmtShort(S.total);
+      el.sClicks.textContent = S.clicks.toLocaleString();
+      el.sPer.textContent = fmtShort(perClick());
+      const now = Date.now();
+      S.buffs = S.buffs.filter((b) => b.end > now);
+      el.buffs.innerHTML = "";
+      S.buffs.forEach((b) => {
+        const s = document.createElement("span");
+        s.className = "buff";
+        s.textContent = b.label + " · " + Math.ceil((b.end - now) / 1000) + "s";
+        el.buffs.appendChild(s);
+      });
+      const fishEvery = has("f0") ? 0.5 : 1;
+      if (now > nextFish && S.total > 30) {
+        spawnFish();
+        nextFish = now + (60000 + Math.random() * 90000) * fishEvery;
+      }
+      renderShop();
+    }
+    if (Date.now() - lastSave > 10000) { lastSave = Date.now(); save(); }
+    requestAnimationFrame(frame);
+  }
+
+  // keep earning while the tab is hidden (rAF pauses)
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) save();
+    else lastT = performance.now();
+  });
+  window.addEventListener("pagehide", save);
+
+  // ---------- Boot ----------
+  function start(hotData) {
+    const loaded = load(hotData && hotData.state);
+    if (loaded) {
+      const away = (Date.now() - (S.last || Date.now())) / 1000;
+      if (!hotData || !hotData.state) {
+        const capped = Math.min(away, 8 * 3600);
+        const gain = basePps() * capped * 0.5;
+        if (gain >= 1 && away > 30) {
+          S.purrs += gain; S.total += gain;
+          setTimeout(() => toast("While you were away, your cats purred <b>" + fmtShort(gain) + "</b> times.", 5000), 400);
+        }
+      }
+      if (S.clicks > 0) el.hint.textContent = "Welcome back. The cat missed you, in its own way.";
+    }
+    buildBuildings(); buildUpgrades(); renderShop();
+    lastT = performance.now();
+    requestAnimationFrame(frame);
+  }
+
+  if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
+    window.claude.hot.snapshot(() => ({ state: S }));
+  }
+  if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(start);
+  else start((window.claude && window.claude.hot && window.claude.hot.data) || {});
+})();
+</script>
+</body>
+</html>
